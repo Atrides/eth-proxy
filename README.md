@@ -70,6 +70,11 @@ eth-proxy is built in python. I have been testing it with 2.7.3, but it should w
  python ./eth-proxy.py
 
 * [Windows]
+Download compiled version
+https://github.com/Atrides/eth-proxy/releases
+
+Or use python source code
+
 1) Download Python Version 2.7.10 for Windows
 https://www.python.org/downloads/
 
