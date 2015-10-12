@@ -40,7 +40,7 @@ Originally developed for DwarfPool http://dwarfpool.com/eth
 
 #Configuration
 
-* all configs in file config.py
+* all configs in file  eth-proxy.conf
 
 
 #Command line to miner start, recommended farm-recheck to use with stratum-proxy is 200
