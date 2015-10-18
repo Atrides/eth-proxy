@@ -50,13 +50,16 @@ def ping(f):
 def on_connect(f):
     '''Callback when proxy get connected to the pool'''
     log.info("Connected to Stratum pool at %s:%d" % f.main_host)
+    f.is_connected = True
+    f.remote_ip = f.client._get_ip()
     #reactor.callLater(30, f.client.transport.loseConnection)
     
     # Hook to on_connect again
     f.on_connect.addCallback(on_connect)
     
     # Get first job and user_id
-    initial_job = (yield f.rpc('eth_submitLogin', [settings.WALLET, settings.CUSTOM_EMAIL], 'Proxy_'+version.VERSION))
+    debug = "_debug" if settings.DEBUG else ""
+    initial_job = (yield f.rpc('eth_submitLogin', [settings.WALLET, settings.CUSTOM_EMAIL], 'Proxy_'+version.VERSION+debug))
 
     reactor.callLater(0, ping, f)
 
@@ -65,38 +68,31 @@ def on_connect(f):
 def on_disconnect(f):
     '''Callback when proxy get disconnected from the pool'''
     log.info("Disconnected from Stratum pool at %s:%d" % f.main_host)
+    f.is_connected = False
     f.on_disconnect.addCallback(on_disconnect)
-
-    # Prepare to failover, currently works very bad
-    #if f.main_host==(settings.POOL_HOST, settings.POOL_PORT):
-    #    main()
-    #else:
-    #    f.is_reconnecting = False
-    #return f
 
 @defer.inlineCallbacks
 def main():
     reactor.disconnectAll()
-    failover = False
-    if settings.POOL_FAILOVER_ENABLE:
-        failover = settings.failover_pool
-        settings.failover_pool = not settings.failover_pool
-
-    pool_host = settings.POOL_HOST
-    pool_port = settings.POOL_PORT
-    if failover and settings.POOL_FAILOVER_ENABLE:
-        pool_host = settings.POOL_HOST_FAILOVER
-        pool_port = settings.POOL_PORT_FAILOVER
 
     log.warning("Ethereum Stratum proxy version: %s" % version.VERSION)
-    log.warning("Trying to connect to Stratum pool at %s:%d" % (pool_host, pool_port))
 
     # Connect to Stratum pool, main monitoring connection
-    f = SocketTransportClientFactory(pool_host, pool_port,
+    log.warning("Trying to connect to Stratum pool at %s:%d" % (settings.POOL_HOST, settings.POOL_PORT))
+    f = SocketTransportClientFactory(settings.POOL_HOST, settings.POOL_PORT,
                 debug=settings.DEBUG, proxy=None,
                 event_handler=client_service.ClientMiningService)
+    f.is_failover = False
 
-    job_registry = jobs.JobRegistry(f)
+    ff = None
+    if settings.POOL_FAILOVER_ENABLE:
+        log.warning("Trying to connect to failover Stratum pool at %s:%d" % (settings.POOL_HOST_FAILOVER, settings.POOL_PORT_FAILOVER))
+        ff = SocketTransportClientFactory(settings.POOL_HOST_FAILOVER, settings.POOL_PORT_FAILOVER,
+                debug=settings.DEBUG, proxy=None,
+                event_handler=client_service.ClientMiningService)
+        ff.is_failover = True
+
+    job_registry = jobs.JobRegistry(f,ff)
     client_service.ClientMiningService.job_registry = job_registry
     client_service.ClientMiningService.reset_timeout()
 
@@ -104,12 +100,16 @@ def main():
     f.on_disconnect.addCallback(on_disconnect)
     # Cleanup properly on shutdown
     reactor.addSystemEventTrigger('before', 'shutdown', on_shutdown, f)
+    if ff:
+        ff.on_connect.addCallback(on_connect)
+        ff.on_disconnect.addCallback(on_disconnect)
+        reactor.addSystemEventTrigger('before', 'shutdown', on_shutdown, ff)
 
     # Block until proxy connect to the pool
     try:
         yield f.on_connect
     except TransportException:
-        log.warning("First pool server must be online first time to start failover")
+        log.warning("First pool server must be online first time during start")
         return
 
     conn = reactor.listenTCP(settings.PORT, Site(getwork_listener.Root(job_registry, settings.ENABLE_WORKER_ID)), interface=settings.HOST)
@@ -133,14 +133,13 @@ def main():
     if settings.MONITORING:
         log.warning("Email monitoring on %s" % settings.MONITORING_EMAIL)
     else:
-        log.warning("Email monitoring diasbled")
-    #log.warning("Failover enabled: %" % settings.POOL_FAILOVER_ENABLE)
+        log.warning("Email monitoring disabled")
+    log.warning("Failover enabled: %s" % settings.POOL_FAILOVER_ENABLE)
     log.warning("-----------------------------------------------------------------------")
 
 if __name__ == '__main__':
     fp = file("eth-proxy.pid", 'w')
     fp.write(str(os.getpid()))
     fp.close()
-    settings.failover_pool = False
     main()
     reactor.run()

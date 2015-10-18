@@ -156,7 +156,7 @@ MONITORING_EMAIL = 'mail@example.com'
 POOL_HOST = 'eth-ru.dwarfpool.com'
 POOL_PORT = 8008
 
-# Failover pool. CURRENTLY DOESN'T WORK!
+# Failover pool.
 POOL_FAILOVER_ENABLE = False
 POOL_HOST_FAILOVER = 'eth-eu.dwarfpool.com'
 POOL_PORT_FAILOVER = 8008

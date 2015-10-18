@@ -18,19 +18,22 @@ class ClientMiningService(GenericEventHandler):
                 cls.timeout.cancel()
             cls.timeout = None
             
-        cls.timeout = reactor.callLater(960, cls.on_timeout)
+        cls.timeout = reactor.callLater(180, cls.on_timeout)
 
     @classmethod
     def on_timeout(cls):
         '''
-            Try to reconnect to the pool after 16 minutes of no activity on the connection.
+            Try to reconnect to the pool after 3 minutes of no activity on the connection.
             It will also drop all Stratum connections to sub-miners
             to indicate connection issues.
         '''
         log.error("Connection to upstream pool timed out")
         cls.reset_timeout()
-        cls.job_registry.f.reconnect()
-                
+        if not cls.job_registry.f.is_connected:
+            cls.job_registry.f.reconnect()
+        if cls.job_registry.ff and not cls.job_registry.ff.is_connected:
+            cls.job_registry.ff.reconnect()
+
     def handle_event(self, method, params, connection_ref):
         '''Handle RPC calls and notifications from the pool'''
         # Yay, we received something from the pool,
@@ -41,11 +44,7 @@ class ClientMiningService(GenericEventHandler):
             '''Proxy just received information about new mining job'''
             # Broadcast to getwork clients
             job = Job.build_from_pool(params)
-            if stratum.logger.settings.DEBUG:
-                log.debug("NEW_JOB %s" % params)
-            else:
-                log.info("NEW_JOB")
-            self.job_registry.replace_job(job)
+            self.job_registry.replace_job(job, connection_ref)
             
         else:
             '''Pool just asked us for something which we don't support...'''

@@ -8,15 +8,16 @@ Originally developed for DwarfPool http://dwarfpool.com/eth
 
 #Features
 
-* Additional 10%~20% increase of earning compared to standard pools
+* Additional up to 20% increase of earning compared to standard pools
 * ETH stratum proxy
+* Automatically failover via proxy
 * Only one connection to the pool
 * Workers get new jobs immediately
 * Submit of shares without network delay, it's like solo-mining but with benefits of professional pool
 * Central Wallet configuration, miners doesn't need wallet as username
 * Support monitoring via email
 * Bypass worker_id for detailed statistic and per rig monitoring
-
+* pass submitHashrate to pool
 
 #How it works
 
@@ -33,9 +34,7 @@ Originally developed for DwarfPool http://dwarfpool.com/eth
 
 #ToDo
 
-* Automatically failover via proxy
-* Create for Windows users compiled .exe file
-* pass submitHashrate to pool
+* ---
 
 
 #Configuration

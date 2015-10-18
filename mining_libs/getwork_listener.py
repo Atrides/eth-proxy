@@ -15,6 +15,7 @@ class Root(Resource):
         Resource.__init__(self)
         self.job_registry = job_registry
         self.isWorkerID = enable_worker_id
+        self.submitHashrates = {}
         
     def json_response(self, msg_id, result):
         resp = json.dumps({'id': msg_id, 'jsonrpc': '2.0', 'result': result})
@@ -47,7 +48,11 @@ class Root(Resource):
             else:
                 worker_name = ''
 
-            if data['method'] == 'eth_submitWork': # ToFix!!!!
+            if data['method'] == 'eth_submitHashrate':
+                if worker_name and (not self.submitHashrates.has_key(worker_name) or int(time.time())-self.submitHashrates[worker_name]>=60):
+                    self.submitHashrates[worker_name] = int(time.time())
+                    threads.deferToThread(self.job_registry.submit, data['method'], data['params'], worker_name)
+            elif data['method'] == 'eth_submitWork':
                 threads.deferToThread(self.job_registry.submit, data['method'], data['params'], worker_name)
             response = self.json_response(data.get('id', 0), True)
         else:

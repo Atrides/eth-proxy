@@ -32,6 +32,7 @@ class SocketTransportClientFactory(ReconnectingClientFactory):
                  is_reconnecting=True, proxy=None,
                  event_handler=GenericEventHandler):
         self.debug = debug
+        self.maxDelay = 60
         self.is_reconnecting = is_reconnecting
         self.signing_key = signing_key
         self.signing_id = signing_id
