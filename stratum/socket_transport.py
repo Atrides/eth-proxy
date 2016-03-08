@@ -44,6 +44,9 @@ class SocketTransportClientFactory(ReconnectingClientFactory):
         self.main_host = (host, port)
         self.new_host = None
         self.proxy = proxy
+        self.is_failover = False
+        self.is_connected = False
+        self.remote_ip = None
         
         self.event_handler = event_handler
         self.protocol = ClientProtocol
@@ -85,7 +88,6 @@ class SocketTransportClientFactory(ReconnectingClientFactory):
             d = self.on_connect
             self.on_connect = defer.Deferred()
             d.errback(e)
-            
         else:
             raise e
         
@@ -118,12 +120,12 @@ class SocketTransportClientFactory(ReconnectingClientFactory):
             new[1] = port
         self.new_host = tuple(new)
 
-        if self.client and self.client.connected:    
+        if self.client and self.client.connected:
             if wait != None:
                 self.delay = wait
-            self.client.transport.connector.disconnect() 
+            self.client.transport.connector.disconnect()
         
-    def retry(self, connector=None):       
+    def retry(self, connector=None):
         if not self.is_reconnecting:
             return
 

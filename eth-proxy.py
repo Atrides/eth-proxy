@@ -3,6 +3,7 @@
 
 import time
 import os
+import sys
 import socket
 
 from stratum import settings
@@ -12,7 +13,7 @@ log = stratum.logger.get_logger('proxy')
 if __name__ == '__main__':
     if len(settings.WALLET)!=42 and len(settings.WALLET)!=40:
         log.error("Wrong WALLET!")
-        quit()
+        sys.exit()
     settings.CUSTOM_EMAIL = settings.MONITORING_EMAIL if settings.MONITORING_EMAIL and settings.MONITORING else ""
 
 from twisted.internet import reactor, defer, protocol
@@ -26,7 +27,6 @@ from mining_libs import getwork_listener
 from mining_libs import client_service
 from mining_libs import jobs
 from mining_libs import version
-from mining_libs.jobs import Job
 
 def on_shutdown(f):
     '''Clean environment properly'''
@@ -42,7 +42,10 @@ def ping(f):
         return
     try:
         yield (f.rpc('eth_getWork', [], ''))
-        reactor.callLater(60, ping, f)
+        if f.is_failover:
+            reactor.callLater(30, ping, f)
+        else:
+            reactor.callLater(5, ping, f)
     except Exception:
         pass
 
@@ -53,10 +56,10 @@ def on_connect(f):
     f.is_connected = True
     f.remote_ip = f.client._get_ip()
     #reactor.callLater(30, f.client.transport.loseConnection)
-    
+
     # Hook to on_connect again
     f.on_connect.addCallback(on_connect)
-    
+
     # Get first job and user_id
     debug = "_debug" if settings.DEBUG else ""
     initial_job = (yield f.rpc('eth_submitLogin', [settings.WALLET, settings.CUSTOM_EMAIL], 'Proxy_'+version.VERSION+debug))
@@ -64,7 +67,7 @@ def on_connect(f):
     reactor.callLater(0, ping, f)
 
     defer.returnValue(f)
-     
+
 def on_disconnect(f):
     '''Callback when proxy get disconnected from the pool'''
     log.info("Disconnected from Stratum pool at %s:%d" % f.main_host)
@@ -82,17 +85,30 @@ def main():
     f = SocketTransportClientFactory(settings.POOL_HOST, settings.POOL_PORT,
                 debug=settings.DEBUG, proxy=None,
                 event_handler=client_service.ClientMiningService)
-    f.is_failover = False
 
-    ff = None
+    f1 = None
+    f2 = None
+    f3 = None
     if settings.POOL_FAILOVER_ENABLE:
-        log.warning("Trying to connect to failover Stratum pool at %s:%d" % (settings.POOL_HOST_FAILOVER, settings.POOL_PORT_FAILOVER))
-        ff = SocketTransportClientFactory(settings.POOL_HOST_FAILOVER, settings.POOL_PORT_FAILOVER,
+        log.warning("Trying to connect to failover Stratum pool-1 at %s:%d" % (settings.POOL_HOST_FAILOVER1, settings.POOL_PORT_FAILOVER1))
+        f1 = SocketTransportClientFactory(settings.POOL_HOST_FAILOVER1, settings.POOL_PORT_FAILOVER1,
                 debug=settings.DEBUG, proxy=None,
                 event_handler=client_service.ClientMiningService)
-        ff.is_failover = True
+        f1.is_failover = True
 
-    job_registry = jobs.JobRegistry(f,ff)
+        log.warning("Trying to connect to failover Stratum pool-2 at %s:%d" % (settings.POOL_HOST_FAILOVER2, settings.POOL_PORT_FAILOVER2))
+        f2 = SocketTransportClientFactory(settings.POOL_HOST_FAILOVER2, settings.POOL_PORT_FAILOVER2,
+                debug=settings.DEBUG, proxy=None,
+                event_handler=client_service.ClientMiningService)
+        f2.is_failover = True
+
+        log.warning("Trying to connect to failover Stratum pool-3 at %s:%d" % (settings.POOL_HOST_FAILOVER3, settings.POOL_PORT_FAILOVER3))
+        f3 = SocketTransportClientFactory(settings.POOL_HOST_FAILOVER3, settings.POOL_PORT_FAILOVER3,
+                debug=settings.DEBUG, proxy=None,
+                event_handler=client_service.ClientMiningService)
+        f3.is_failover = True
+
+    job_registry = jobs.JobRegistry(f,f1,f2,f3)
     client_service.ClientMiningService.job_registry = job_registry
     client_service.ClientMiningService.reset_timeout()
 
@@ -100,10 +116,21 @@ def main():
     f.on_disconnect.addCallback(on_disconnect)
     # Cleanup properly on shutdown
     reactor.addSystemEventTrigger('before', 'shutdown', on_shutdown, f)
-    if ff:
-        ff.on_connect.addCallback(on_connect)
-        ff.on_disconnect.addCallback(on_disconnect)
-        reactor.addSystemEventTrigger('before', 'shutdown', on_shutdown, ff)
+    if f1:
+        f1.on_connect.addCallback(on_connect)
+        f1.on_disconnect.addCallback(on_disconnect)
+        reactor.addSystemEventTrigger('before', 'shutdown', on_shutdown, f1)
+
+    if f2:
+        f2.on_connect.addCallback(on_connect)
+        f2.on_disconnect.addCallback(on_disconnect)
+        reactor.addSystemEventTrigger('before', 'shutdown', on_shutdown, f2)
+
+    if f3:
+        f3.on_connect.addCallback(on_connect)
+        f3.on_disconnect.addCallback(on_disconnect)
+        reactor.addSystemEventTrigger('before', 'shutdown', on_shutdown, f3)
+
 
     # Block until proxy connect to the pool
     try:
@@ -111,6 +138,7 @@ def main():
     except TransportException:
         log.warning("First pool server must be online first time during start")
         return
+
 
     conn = reactor.listenTCP(settings.PORT, Site(getwork_listener.Root(job_registry, settings.ENABLE_WORKER_ID)), interface=settings.HOST)
 

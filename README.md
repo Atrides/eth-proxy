@@ -1,6 +1,6 @@
 #Description
 
-This is Stratum Proxy for Ethereum-pools (RPCv2) using asynchronous networking written in Python Twisted.
+This is Stratum Proxy for Ethereum based pools (RPCv2) using asynchronous networking written in Python Twisted.
 Originally developed for DwarfPool http://dwarfpool.com/eth
 
 **NOTE:** This fork is still in development. Some features may be broken. Please report any broken features or issues.
@@ -47,9 +47,21 @@ Originally developed for DwarfPool http://dwarfpool.com/eth
 * ./ethminer --farm-recheck 200 -G -F http://127.0.0.1:8080/rig1
 
 
+#External script to restart proxy (made by rain)
+
+* https://paste.ubuntu.com/15327007/
+
+
+# Proxy working check
+
+* To check that proxy works open in browser http://127.0.0.1:8080/ (or your changed ip and port from config)
+* If you see "Ethereum stratum proxy" and some infos about connections.
+* If not then mostly case that you have application running on this port, at example Antivirus.
+
+
 #Donations
 
-* ETH:  0xb7302f5988cd483db920069a5c88f049a3707e2f
+* ETH:  0xea7263feb7d8a8ab0a11eedd8f1ce04412ab0820
 
 
 #Requirements

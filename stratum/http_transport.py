@@ -8,7 +8,6 @@ import string
 
 import helpers
 import semaphore
-#from storage import Storage
 from protocol import Protocol, RequestCounter
 from event_handler import GenericEventHandler
 import settings
@@ -107,7 +106,6 @@ class HttpSession(Session):
     
     def __init__(self, *args, **kwargs):
         Session.__init__(self, *args, **kwargs)
-        #self.storage = Storage()
         
         # Reference to connection object (Protocol instance)
         self.protocol = None

@@ -31,8 +31,12 @@ class ClientMiningService(GenericEventHandler):
         cls.reset_timeout()
         if not cls.job_registry.f.is_connected:
             cls.job_registry.f.reconnect()
-        if cls.job_registry.ff and not cls.job_registry.ff.is_connected:
-            cls.job_registry.ff.reconnect()
+        if cls.job_registry.f1 and not cls.job_registry.f1.is_connected:
+            cls.job_registry.f1.reconnect()
+        if cls.job_registry.f2 and not cls.job_registry.f2.is_connected:
+            cls.job_registry.f2.reconnect()
+        if cls.job_registry.f3 and not cls.job_registry.f3.is_connected:
+            cls.job_registry.f3.reconnect()
 
     def handle_event(self, method, params, connection_ref):
         '''Handle RPC calls and notifications from the pool'''

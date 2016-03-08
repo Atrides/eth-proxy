@@ -285,12 +285,12 @@ class Protocol(LineOnlyReceiver):
         start_time = time.time()
         self.lookup_table[request_id] = {'defer': d, 'method': method, 'params': params, 'start_time':start_time, 'worker_name':worker}
         return d
-                    
+
 class ClientProtocol(Protocol):
     def connectionMade(self):
         Protocol.connectionMade(self)
         self.factory.client = self
-                
+
         if self.factory.timeout_handler:
             self.factory.timeout_handler.cancel()
             self.factory.timeout_handler = None
@@ -299,26 +299,25 @@ class ClientProtocol(Protocol):
             log.debug("Resuming connection: %s" % self.factory.after_connect)
             for cmd in self.factory.after_connect:
                 self.rpc(cmd[0], cmd[1], cmd[2])
-            
+
         if not self.factory.on_connect.called:
             d = self.factory.on_connect 
             self.factory.on_connect = defer.Deferred()
             d.callback(self.factory)
-            
-            
+
         #d = self.rpc('node.get_peers', [])
         #d.addCallback(self.factory.add_peers)
-                
+
     def connectionLost(self, reason):
         self.factory.client = None
 
         if self.factory.timeout_handler:
             self.factory.timeout_handler.cancel()
             self.factory.timeout_handler = None
-        
+
         if not self.factory.on_disconnect.called:
             d = self.factory.on_disconnect
             self.factory.on_disconnect = defer.Deferred()
             d.callback(self.factory)
-            
+
         Protocol.connectionLost(self, reason)

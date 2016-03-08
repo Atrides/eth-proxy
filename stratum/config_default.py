@@ -142,10 +142,10 @@ HOST = "0.0.0.0"
 PORT = 8080
 
 # Coin address where money goes.
-WALLET = '0x2a65aca4d5fc5b5c859090a6c34d164135398226'
+WALLET = 'XXXXXX'
 
 # It's useful for individually monitoring and statistic.
-ENABLE_WORKER_ID = True
+ENABLE_WORKER_ID = False
 
 # On DwarfPool you have option to monitor your workers via email.
 # If WORKER_ID is enabled, you can monitor every worker/rig separately.
@@ -153,10 +153,14 @@ MONITORING = False
 MONITORING_EMAIL = 'mail@example.com'
 
 # Main pool
-POOL_HOST = 'eth-ru.dwarfpool.com'
+POOL_HOST = 'eth-eu.dwarfpool.com'
 POOL_PORT = 8008
 
 # Failover pool.
 POOL_FAILOVER_ENABLE = False
-POOL_HOST_FAILOVER = 'eth-eu.dwarfpool.com'
-POOL_PORT_FAILOVER = 8008
+POOL_HOST_FAILOVER1 = 'eth-ru.dwarfpool.com'
+POOL_PORT_FAILOVER1 = 8008
+POOL_HOST_FAILOVER2 = 'eth-us.dwarfpool.com'
+POOL_PORT_FAILOVER2 = 8008
+POOL_HOST_FAILOVER3 = 'eth-hk.dwarfpool.com'
+POOL_PORT_FAILOVER3 = 8008
