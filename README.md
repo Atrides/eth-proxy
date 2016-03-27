@@ -20,7 +20,7 @@ Originally developed for DwarfPool http://dwarfpool.com/eth
 * pass submitHashrate to pool
 
 #How it works
-
+```
    Pool A <---+                        +-------------+ Rig1 / PC1
  (Active)      |                       |
                |                       +-------------+ Rig2 / PC2
@@ -30,7 +30,7 @@ Originally developed for DwarfPool http://dwarfpool.com/eth
                                        +-------------+ Rig4 / PC4
                                        |
                                        +-------------+ Leaserigs
-
+```
 
 #ToDo
 
