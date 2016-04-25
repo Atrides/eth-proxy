@@ -20,7 +20,7 @@ Originally developed for DwarfPool http://dwarfpool.com/eth
 * pass submitHashrate to pool
 
 #How it works
-
+```
    Pool A <---+                        +-------------+ Rig1 / PC1
  (Active)      |                       |
                |                       +-------------+ Rig2 / PC2
@@ -30,7 +30,7 @@ Originally developed for DwarfPool http://dwarfpool.com/eth
                                        +-------------+ Rig4 / PC4
                                        |
                                        +-------------+ Leaserigs
-
+```
 
 #ToDo
 
@@ -76,9 +76,14 @@ eth-proxy is built in python. I have been testing it with 2.7.3, but it should w
 
 * [Linux]
 1) install twisted
+```
  apt-get install python-twisted
+```
+
 2) start proxy with
+```
  python ./eth-proxy.py
+```
 
 * [Windows]
 Download compiled version
@@ -100,15 +105,17 @@ https://pypi.python.org/pypi/Twisted/15.4.0
 File Twisted-15.4.0.win32-py2.7.msi (32bit) or Twisted-15.4.0.win-amd64-py2.7.msi (64bit)
 
 5) Install zope.interface, in console run:
+```
    easy_install -U zope.interface
-
+```
 6) Install PyWin32 v2.7
 pywin32-219.win32-py2.7.exe or pywin32-219.win-amd64-py2.7.exe
 http://sourceforge.net/projects/pywin32/files/pywin32/
 
 7) Download eth-proxy. Extract eth-proxy.zip. Change settings in config.py and start with command:
+```
   python xmr-proxy.py
-
+```
 
 #Contact
 
